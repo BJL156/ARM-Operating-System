@@ -17,6 +17,10 @@ _start:
   stp xzr, xzr, [x0], #16
   b 1b
 2:
+  adr x0, vectors
+  msr vbar_el1, x0
+  isb
+
   bl kernel_main
 
 core0_hang:
