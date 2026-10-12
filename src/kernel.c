@@ -10,6 +10,11 @@ void kernel_main(void) {
 
   kprintf("Current EL: %lu\n", el >> 2);
 
+  asm volatile(
+    "mov x5, #0x1234\n"
+    "svc #0\n"
+  );
+
   volatile uint64_t *bad = (volatile uint64_t *)0x41000001;
   uint64_t x = *bad;
   (void)x;

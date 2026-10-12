@@ -1,4 +1,5 @@
 #include "kprintf.h"
+#include "trap.h"
 #include "panic.h"
 
 #include <stdint.h>
@@ -41,7 +42,7 @@ static const char *esr_class_name(uint64_t ec) {
   }
 }
 
-void exception_handler(uint64_t idx) {
+void exception_handler(TrapFrame *tf, uint64_t idx) {
   kprintf("EXCEPTION: slot %lu\n", idx);
 
   uint64_t esr = READ_SYSREG(esr_el1);
@@ -51,6 +52,8 @@ void exception_handler(uint64_t idx) {
   kprintf("CLASS: 0x%lx (%s)\n", ec, esr_class_name(ec));
   kprintf("ELR_EL1: 0x%lX\n", READ_SYSREG(elr_el1));
   kprintf("FAR_EL1: 0x%lX\n", READ_SYSREG(far_el1));
-
+  kprintf("frame ELR: 0x%lX\n", tf->elr);
+  kprintf("frame SPSR: 0x%lX\n", tf->spsr);
+  
   panic("Unhandled exception");
 }
