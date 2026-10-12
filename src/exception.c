@@ -1,5 +1,7 @@
+#include "gic.h"
 #include "kprintf.h"
 #include "sysreg.h"
+#include "timer.h"
 #include "trap.h"
 #include "panic.h"
 
@@ -37,7 +39,26 @@ static const char *esr_class_name(uint64_t ec) {
   }
 }
 
+static uint64_t ticks = 0;
+
 void exception_handler(TrapFrame *tf, uint64_t idx) {
+  if (idx == 5) {
+    uint32_t id = gic_ack();
+
+    if (id == 1023) {
+      return;
+    }
+
+    if (id == 30) {
+      timer_start(timer_freq());
+      ticks++;
+      kprintf("tick %lu\n", ticks);
+    }
+
+    gic_eoi(id);
+    return;
+  }
+
   kprintf("EXCEPTION: slot %lu\n", idx);
 
   uint64_t esr = READ_SYSREG(esr_el1);
@@ -53,5 +74,6 @@ void exception_handler(TrapFrame *tf, uint64_t idx) {
   if (ec == 0x15) {
     return;
   }
+
   panic("Unhandled exception");
 }
