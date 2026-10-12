@@ -10,14 +10,9 @@ void kernel_main(void) {
 
   kprintf("Current EL: %lu\n", el >> 2);
 
-  asm volatile(
-    "mov x5, #0x1234\n"
-    "svc #0\n"
-  );
-
-  volatile uint64_t *bad = (volatile uint64_t *)0x41000001;
-  uint64_t x = *bad;
-  (void)x;
+  register uint64_t r asm("x5") = 0x1234;
+  asm volatile("svc #0" : "+r"(r));
+  kprintf("x5 after svc: 0x%lX\n", r);
 
   kprintf("Hello from ARM Operating System.\n");
 

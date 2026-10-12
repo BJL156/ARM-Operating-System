@@ -54,6 +54,9 @@ void exception_handler(TrapFrame *tf, uint64_t idx) {
   kprintf("FAR_EL1: 0x%lX\n", READ_SYSREG(far_el1));
   kprintf("frame ELR: 0x%lX\n", tf->elr);
   kprintf("frame SPSR: 0x%lX\n", tf->spsr);
-  
+
+  if (ec == 0x15) {
+    return;
+  }
   panic("Unhandled exception");
 }
