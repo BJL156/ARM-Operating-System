@@ -1,6 +1,8 @@
 .macro ventry idx
   .balign 0x80
-  mov x0, #\idx
+  sub sp, sp, #272
+  stp x0, x1, [sp, #0]
+  mov x1, #\idx
   b exception_entry
 .endm
 
@@ -26,6 +28,7 @@ vectors:
   ventry 15
 
 exception_entry:
+  mov x0, x1
   bl exception_handler
 1:
   wfe
