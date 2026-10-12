@@ -1,14 +1,9 @@
 #include "kprintf.h"
+#include "sysreg.h"
 #include "trap.h"
 #include "panic.h"
 
 #include <stdint.h>
-
-#define READ_SYSREG(name) ({ \
-    uint64_t v; \
-    asm volatile("mrs %0, " #name : "=r"(v)); \
-    v; \
-})
 
 static const char *esr_class_name(uint64_t ec) {
   switch (ec) {
