@@ -18,7 +18,7 @@ OBJS   := $(C_SRCS:$(SRC)/%.c=$(BUILD)/%.c.o) $(S_SRCS:$(SRC)/%.S=$(BUILD)/%.S.o
 DEPS   := $(OBJS:.o=.d)
 
 QEMU := qemu-system-aarch64
-QEMU_FLAGS := -machine virt,gic-version=2 -cpu cortex-a72 -nographic -kernel $(KERNEL)
+QEMU_FLAGS := -machine virt,gic-version=2 -cpu cortex-a72 -m 128M -nographic -kernel $(KERNEL)
 
 .PHONY: all run debug dump clean
 
