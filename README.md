@@ -7,6 +7,21 @@ A hobby operating system written from scratch for the AArch64 architecture. This
 
 The project is currently in its early stages, with development focused on establishing the foundations for a functional operating system.
 
+### Features
+- [x] Bootloader
+  - [x] Parks all cores besides core 0.
+  - [x] Sets a valid stack pointer.
+  - [x] Zeros out bss.
+  - [x] Points to vector table.
+  - [x] Jumps into a C main kernel function.
+- [x] UART
+  - [x] Uses QEMU's virt board memory mapped location.
+  - [x] Sends characters over a serial connection.
+- [x] Exception handling.
+  - [X] Exception Handling.
+  - [x] Timer interrupt.
+  - [x] GIC setup.
+
 ## Build
 > [!NOTE]
 > **Needs to be built on Linux. For Windows, use WSL.**
