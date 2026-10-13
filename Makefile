@@ -8,7 +8,7 @@ BUILD  := build
 KERNEL := $(BUILD)/kernel.elf
 
 CFLAGS := -Wall -Wextra -O2 -g \
-					-mcpu=cortex-a72 -mgeneral-regs-only \
+          -mcpu=cortex-a72 -mgeneral-regs-only \
           -ffreestanding -nostdlib -fno-pic -fno-pie -fno-stack-protector \
           -MMD -MP
 

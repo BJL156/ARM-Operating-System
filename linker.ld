@@ -24,4 +24,7 @@ SECTIONS {
     . += 0x4000;
     __stack_top = .;
   }
+
+  . = ALIGN(4096);
+  __kernel_end = .;
 }
