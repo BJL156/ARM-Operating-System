@@ -39,3 +39,4 @@ This will automatically boot the OS using QEMU for virtualization.
 
 ## Current Limitations
 - Early-stage development.
+- Built for only QEMU.
