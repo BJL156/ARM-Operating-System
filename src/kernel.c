@@ -1,7 +1,9 @@
 #include "gic.h"
 #include "kprintf.h"
+#include "pmm.h"
 #include "timer.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define RAM_BASE 0x40000000UL
@@ -27,6 +29,23 @@ void kernel_main(void) {
   kprintf("RAM end:      %lx\n", (unsigned long)ram_end);
   kprintf("Free pages:   %lu\n", (unsigned long)free_pages);
 
+  pmm_init(kernel_end, ram_end);
+  kprintf("PMM free pages: %lu\n", pmm_free_count());
+  kprintf("PMM allocate 1: %p\n", pmm_alloc());
+  uint64_t *ptr = pmm_alloc();
+  kprintf("PMM allocate 2: %p\n", ptr);
+  kprintf("PMM allocate 3: %p\n", pmm_alloc());
+
+  pmm_free(ptr);
+
+  kprintf("PMM allocate 4: %p\n", pmm_alloc());
+
+  uint64_t count = 0;
+  while (pmm_alloc() != NULL) {
+    count++;
+  }
+  kprintf("Allocated %lu pages, free now %lu\n", count, pmm_free_count());
+  
   gic_init();
   gic_enable_irq(30);
   timer_start(timer_freq());
