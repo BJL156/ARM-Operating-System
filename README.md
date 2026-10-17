@@ -24,7 +24,7 @@ The project is currently in its early stages, with development focused on establ
 
 ## Build
 > [!NOTE]
-> **Needs to be built on Linux. For Windows, use WSL.**
+> **Needs to be built on Linux. For Windows, use WSL. Additionally, the build process requires a GCC AArch64 cross compiler along with QEMU for virtualization.**
 
 Clone the repository and change into its directory:
 ```bash
@@ -39,3 +39,4 @@ This will automatically boot the OS using QEMU for virtualization.
 
 ## Current Limitations
 - Early-stage development.
+- Built for only QEMU.
