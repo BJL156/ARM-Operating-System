@@ -5,7 +5,7 @@
 
 A hobby operating system written from scratch for the AArch64 architecture. This project aims to explore low-level system programming, operating system development, and the ARM 64-bit (AArch64) architecture.
 
-The project is currently in its early stages, with development focused on establishing the foundations for a functional operating system.
+The project is currently in its early stages, with development focused on establishing the foundations for a functional operating system. ARM was chosen as the target ISA to continue from the [ARM tool chain](https://github.com/BJL156#aarch64-toolchain-roadmap) that I have been developing.
 
 ### Features
 - [x] Bootloader
