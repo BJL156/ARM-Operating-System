@@ -24,7 +24,7 @@ The project is currently in its early stages, with development focused on establ
 
 ## Build
 > [!NOTE]
-> **Needs to be built on Linux. For Windows, use WSL. Additionally, the build process requires a GCC AArch64 cross compiler along with QEMU for virtualization.**
+> **Needs to be built on Linux. For Windows, use WSL. Additionally, the build process requires a GNU AArch64 cross compiler toolchain along with QEMU for virtualization.**
 
 Clone the repository and change into its directory:
 ```bash
