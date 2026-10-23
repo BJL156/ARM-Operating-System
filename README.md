@@ -3,7 +3,7 @@
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20WSL-lightgrey.svg)](https://www.linux.org/)
 [![Architecture](https://img.shields.io/badge/target-AArch64-red.svg)](https://developer.arm.com/Architectures/AArch64)
 
-A hobby operating system written from scratch for the AArch64 architecture. This project aims to explore low-level system programming, operating system development, and the ARM 64-bit (AArch64) architecture.
+A hobby operating system written from scratch for the AArch64 architecture. This project aims to explore low-level system programming, operating system development, and the AArch64 architecture.
 
 The goal of this project is to be able to create user programs that uses my own compiler and assembler to turn source files into runnable binaries.
 
