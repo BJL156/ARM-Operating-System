@@ -3,6 +3,7 @@
 #include "panic.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #define PAGE_SIZE 4096
 
@@ -39,6 +40,19 @@ void *pmm_alloc(void) {
   free_page_count--;
 
   return (void *)page;
+}
+
+void *pmm_alloc_zeroed(void) {
+  unsigned char *page = pmm_alloc();
+  if (page == NULL) {
+    return NULL;
+  }
+
+  for (size_t i = 0; i < PAGE_SIZE; i++) {
+    page[i] = 0;
+  }
+
+  return page;
 }
 
 void pmm_free(void *ptr) {

@@ -1,7 +1,9 @@
 #include "gic.h"
 #include "kprintf.h"
 #include "mem.h"
+#include "mmu.h"
 #include "pmm.h"
+#include "sysreg.h"
 #include "timer.h"
 
 #include <stddef.h>
@@ -11,44 +13,26 @@
 #define RAM_SIZE (128UL * 1024 * 1024)
 #define RAM_END  (RAM_BASE + RAM_SIZE)
 
-#define PAGE_SIZE 4096UL
+#define TIMER_IRQ 30
 
-extern char __kernel_end[];
 extern char _start[];
+extern char __kernel_end[];
 
 void kernel_main(void) {
-  uint64_t kernel_start = (uint64_t)_start;
-  uint64_t kernel_end = (uint64_t)__kernel_end;
-  uint64_t ram_end = RAM_END;
-
-  uint64_t free_pages = (ram_end - kernel_end) / PAGE_SIZE;
-
   kprintf("Hello from ARM Operating System.\n");
+  kprintf("Current EL: %lu\n", READ_SYSREG(CurrentEL) >> 2);
 
-  kprintf("Kernel start: %lx\n", (unsigned long)kernel_start);
-  kprintf("Kernel end:   %lx\n", (unsigned long)kernel_end);
-  kprintf("RAM end:      %lx\n", (unsigned long)ram_end);
-  kprintf("Free pages:   %lu\n", (unsigned long)free_pages);
+  kprintf("Kernel start: %p\n", (void *)_start);
+  kprintf("Kernel end:   %p\n", (void *)__kernel_end);
+  kprintf("RAM end:      %p\n", (void *)RAM_END);
 
-  pmm_init(kernel_end, ram_end);
-  kprintf("PMM free pages: %lu\n", pmm_free_count());
-  kprintf("PMM allocate 1: %p\n", pmm_alloc());
-  uint64_t *ptr = pmm_alloc();
-  kprintf("PMM allocate 2: %p\n", ptr);
-  kprintf("PMM allocate 3: %p\n", pmm_alloc());
+  pmm_init((uintptr_t)__kernel_end, RAM_END);
+  kprintf("Free pages:   %lu\n", pmm_free_count());
 
-  pmm_free(ptr);
+  mmu_init();
 
-  kprintf("PMM allocate 4: %p\n", pmm_alloc());
-
-  uint64_t count = 0;
-  while (pmm_alloc() != NULL) {
-    count++;
-  }
-  kprintf("Allocated %lu pages, free now %lu\n", count, pmm_free_count());
-  
   gic_init();
-  gic_enable_irq(30);
+  gic_enable_irq(TIMER_IRQ);
   timer_start(timer_freq());
   asm volatile("msr daifclr, #2");
 

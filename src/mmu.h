@@ -1,6 +1,8 @@
 #ifndef MMU_H
 #define MMU_H
 
+#include <stdint.h>
+
 #define PTE_TYPE_MASK  0x3ULL
 #define PTE_BLOCK      0x1ULL
 #define PTE_TABLE      0x3ULL
@@ -21,5 +23,9 @@
 
 #define PTE_ADDR_MASK  0x0000FFFFC0000000ULL
 #define PTE_ADDR_SHIFT 30
+
+#define MAIR_EL1_VALUE (0x00ULL | (0xFFULL << 8))
+
+void mmu_init(void);
 
 #endif
