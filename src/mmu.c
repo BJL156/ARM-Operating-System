@@ -8,6 +8,18 @@
 #include <stdint.h>
 #include <stddef.h>
 
+extern char __text_start[], __text_end[];
+extern char __rodata_start[], __rodata_end[];
+extern char __data_start[], __kernel_end[];
+
+#define RAM_BASE 0x40000000UL
+#define RAM_SIZE (128UL * 1024 * 1024)
+#define RAM_END  (RAM_BASE + RAM_SIZE)
+
+#define GICD_PHYS 0x08000000UL
+#define GICC_PHYS 0x08010000UL
+#define UART_PHYS 0x09000000UL
+
 static uint64_t l1_index(uint64_t va) {
   return (va >> 30) & 0x1FF;
 }
@@ -91,38 +103,42 @@ void mmu_enable(void) {
   asm volatile("isb");
 }
 
+static void show_entry(const char *name, uint64_t l1[], uint64_t va) {
+  uint64_t *e = walk(l1, va, 0);
+  if (e == NULL) {
+    kprintf("%s (0x%lx): not mapped\n", name, va);
+  } else {
+    kprintf("%s (0x%lx): 0x%lx\n", name, va, *e);
+  }
+}
+
 void mmu_init(void) {
-  uint64_t *l1 = (uint64_t *)pmm_alloc_zeroed();
-  if (l1 == 0) {
-    panic("MMU: failed to allocate L1 table.");
-    return;
+  uint64_t *l1 = pmm_alloc_zeroed();
+  if (l1 == NULL) {
+    panic("MMU: out of memory for L1 table.");
   }
 
-  l1[0] = PTE_BLOCK
-        | PTE_ATTR(0)
-        | PTE_AP_EL1_RW
-        | PTE_SH_INNER
-        | PTE_AF
-        | (0x00000000ULL & PTE_ADDR_MASK);
+  map_range(l1, (uint64_t)__text_start, (uint64_t)__text_start,
+            __text_end - __text_start, MAP_RX);
+  map_range(l1, (uint64_t)__rodata_start, (uint64_t)__rodata_start,
+            __rodata_end - __rodata_start, MAP_RO);
 
-  l1[1] = PTE_BLOCK
-        | PTE_ATTR(1)
-        | PTE_AP_EL1_RW
-        | PTE_SH_INNER
-        | PTE_AF
-        | (0x40000000ULL & PTE_ADDR_MASK);
+  map_range(l1, (uint64_t)__data_start, (uint64_t)__data_start,
+            RAM_END - (uint64_t)__data_start, MAP_RW);
 
-  kprintf("L1[0] = 0x%lX\n", (unsigned long)l1[0]);
-  kprintf("L1[1] = 0x%lX\n", (unsigned long)l1[1]);
+  map_range(l1, GICD_PHYS, GICD_PHYS, 0x1000, MAP_DEV);
+  map_range(l1, GICC_PHYS, GICC_PHYS, 0x2000, MAP_DEV);
+  map_range(l1, UART_PHYS, UART_PHYS, 0x1000, MAP_DEV);
+
+  show_entry("text  ", l1, (uint64_t)__text_start);
+  show_entry("rodata", l1, (uint64_t)__rodata_start);
+  show_entry("data  ", l1, (uint64_t)__data_start);
+  show_entry("uart  ", l1, UART_PHYS);
 
   WRITE_SYSREG(mair_el1, MAIR_VALUE);
   WRITE_SYSREG(tcr_el1, TCR_VALUE);
   WRITE_SYSREG(ttbr0_el1, (uint64_t)l1);
   asm volatile("isb");
-
-  kprintf("MAIR_EL1:  0x%lx\n", READ_SYSREG(mair_el1));
-  kprintf("TCR_EL1:   0x%lx\n", READ_SYSREG(tcr_el1));
-  kprintf("TTBR0_EL1: 0x%lx\n", READ_SYSREG(ttbr0_el1));
 
   mmu_enable();
 }
