@@ -1,6 +1,5 @@
 #include "gic.h"
 #include "kprintf.h"
-#include "mem.h"
 #include "mmu.h"
 #include "pmm.h"
 #include "sysreg.h"

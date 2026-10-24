@@ -5,11 +5,16 @@
 
 #define PTE_TYPE_MASK  0x3ULL
 #define PTE_BLOCK      0x1ULL
-#define PTE_TABLE      0x3ULL
+#define PTE_VALID     (1UL << 0)
+#define PTE_TABLE     (3UL << 0)
+#define PTE_PAGE      (3UL << 0)
+#define PTE_AP_RO     (1UL << 7)
+#define PTE_AP_EL0    (1UL << 6)
+#define PTE_PXN       (1UL << 53)
+#define PTE_UXN       (1UL << 54)
 
 #define PTE_ATTR_SHIFT 2
 #define PTE_ATTR_MASK  (0x7ULL << PTE_ATTR_SHIFT)
-#define pte_attr(n)    (((uint64_t)(n) & 0x7ULL) << PTE_ATTR_SHIFT)
 
 #define PTE_AP_SHIFT   6
 #define PTE_AP_MASK    (0x3ULL << PTE_AP_SHIFT)
@@ -21,10 +26,22 @@
 
 #define PTE_AF         (1ULL << 10)
 
-#define PTE_ADDR_MASK  0x0000FFFFC0000000ULL
-#define PTE_ADDR_SHIFT 30
+#define PTE_ADDR_MASK  0x0000FFFFFFFFF000ULL
 
-#define MAIR_EL1_VALUE  (0x00ULL | (0xFFULL << 8))
+#define PTE_ATTR(idx) ((uint64_t)(idx) << 2)
+
+#define MAP_RX  (PTE_AF | PTE_SH_INNER | PTE_ATTR(MAIR_IDX_NORMAL) | \
+                PTE_AP_RO | PTE_UXN)
+
+#define MAP_RO  (PTE_AF | PTE_SH_INNER | PTE_ATTR(MAIR_IDX_NORMAL) | \
+                PTE_AP_RO | PTE_PXN | PTE_UXN)
+
+#define MAP_RW  (PTE_AF | PTE_SH_INNER | PTE_ATTR(MAIR_IDX_NORMAL) | \
+                PTE_PXN | PTE_UXN)
+
+#define MAP_DEV (PTE_AF | PTE_ATTR(MAIR_IDX_DEVICE) | \
+                PTE_PXN | PTE_UXN)
+
 #define MAIR_IDX_DEVICE 0
 #define MAIR_IDX_NORMAL 1
 #define MAIR_ATTR_DEVICE_nGnRnE 0x00UL
@@ -44,6 +61,9 @@
 #define TCR_VALUE (TCR_T0SZ(25) | TCR_IRGN0_WB | TCR_ORGN0_WB | \
                   TCR_SH0_INNER | TCR_TG0_4K | TCR_TG1_4K |    \
                   TCR_EPD1 | TCR_IPS_40BIT)
+
+void map_page(uint64_t *l1, uint64_t va, uint64_t pa, uint64_t flags);
+void map_range(uint64_t *l1, uint64_t va, uint64_t pa, uint64_t size, uint64_t flags);
 
 void mmu_enable(void);
 void mmu_init(void);
