@@ -11,18 +11,13 @@ The project is currently in its early stages, with development focused on establ
 
 ### Features
 - [x] Bootloader
-  - [x] Parks all cores besides core 0
-  - [x] Sets a valid stack pointer
-  - [x] Zeros out bss
-  - [x] Points to vector table
-  - [x] Jumps into a C main kernel function
 - [x] UART
-  - [x] Uses QEMU's virt board memory mapped location
-  - [x] Sends characters over a serial connection
 - [x] Exception handling
-  - [X] Exception Handling
-  - [x] Timer interrupt
-  - [x] GIC setup
+- [x] GIC
+- [x] Timer
+- [x] Memory functions
+- [x] PMM
+- [x] MMU
 
 ## Build
 > [!NOTE]
