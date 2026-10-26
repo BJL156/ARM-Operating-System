@@ -15,7 +15,7 @@ The project is currently in its early stages, with development focused on establ
 - [x] Exception handling
 - [x] GIC
 - [x] Timer
-- [x] Memory functions
+- [x] Memory functions (`memcpy`, `memmove`, `memset`)
 - [x] PMM
 - [x] MMU
 
