@@ -31,9 +31,8 @@ void kernel_main(void) {
 
   mmu_init();
 
-  volatile uint64_t *bad = (volatile uint64_t *)0x80000000;
-  uint64_t x = *bad;
-  (void)x;
+  extern char __text_end[];
+  *(volatile uint32_t *)(__text_end - 4) = 0;
 
   gic_init();
   gic_enable_irq(TIMER_IRQ);
