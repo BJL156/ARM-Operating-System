@@ -30,9 +30,6 @@ void kernel_main(void) {
 
   mmu_init();
 
-  extern char __text_end[];
-  *(volatile uint32_t *)(__text_end - 4) = 0;
-
   gic_init();
   gic_enable_irq(TIMER_IRQ);
   timer_start(timer_freq());
