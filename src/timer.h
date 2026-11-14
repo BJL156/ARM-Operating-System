@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define TICK_HZ 100
+
 uint64_t timer_freq(void);
 uint64_t timer_count(void);
 void timer_start(uint64_t ticks);

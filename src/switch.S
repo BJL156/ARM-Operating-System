@@ -27,6 +27,7 @@ cpu_switch_to:
 .global task_entry_trampoline
 
 task_entry_trampoline:
+  msr daifclr, #2
   mov x0, x20
   blr x19
   bl task_exit

@@ -4,6 +4,7 @@
 #include "timer.h"
 #include "trap.h"
 #include "panic.h"
+#include "sched.h"
 
 #include <stdint.h>
 
@@ -39,8 +40,6 @@ static const char *esr_class_name(uint64_t ec) {
   }
 }
 
-static uint64_t ticks = 0;
-
 void exception_handler(TrapFrame *tf, uint64_t idx) {
   if (idx == 5) {
     uint32_t id = gic_ack();
@@ -50,12 +49,15 @@ void exception_handler(TrapFrame *tf, uint64_t idx) {
     }
 
     if (id == 30) {
-      timer_start(timer_freq());
-      ticks++;
-      kprintf("tick %lu\n", ticks);
+      timer_start(timer_freq() / TICK_HZ);
+      sched_tick();
     }
 
     gic_eoi(id);
+
+    if (id == 30) {
+      yield();
+    }
     return;
   }
 

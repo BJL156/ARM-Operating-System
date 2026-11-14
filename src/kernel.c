@@ -25,9 +25,10 @@ extern char __kernel_end[];
 
 static void worker(void *arg) {
   const char *name = arg;
-  for (int i = 0; i < 5; i++) {
-    kprintf("%s: %d\n", name, i);
-    yield();
+  uint64_t period = (name[0] == 'A') ? 200 : 500;
+  for (uint64_t i = 0; ; i++) {
+    kprintf("%s: %lu\n", name, i);
+    task_sleep_ms(period);
   }
 }
 
@@ -50,30 +51,10 @@ void kernel_main(void) {
   sched_add(task_create(worker, "A", "A"));
   sched_add(task_create(worker, "B", "B"));
 
-  for (int i = 0; i < 12; i++) {
-    yield();
-  }
-
   gic_init();
   gic_enable_irq(TIMER_IRQ);
-  timer_start(timer_freq());
+  timer_start(timer_freq() / TICK_HZ);
   asm volatile("msr daifclr, #2");
-
-  void *a = kmalloc(100);
-  void *b = kmalloc(50);
-  void *c = kmalloc(1);
-  kprintf("a=%p b=%p c=%p\n", a, b, c);
-  kprintf("kmalloc(0)=%p, kmalloc(too big)=%p\n", kmalloc(0), kmalloc(HEAP_SIZE));
-
-  kfree(b);
-  void *b2 = kmalloc(50);
-  kprintf("b=%p b2=%p (should match)\n", b, b2);
-
-  kfree(a);
-  kfree(b2);
-  kfree(c);
-  void *big = kmalloc(HEAP_SIZE - 32);
-  kprintf("big=%p (should be %p)\n", big, a);
 
   while (1) {
     asm volatile("wfi");

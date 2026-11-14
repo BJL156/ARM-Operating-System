@@ -16,7 +16,8 @@ typedef struct {
 enum TaskState {
   TASK_READY,
   TASK_RUNNING,
-  TASK_DEAD
+  TASK_SLEEPING,
+  TASK_DEAD,
 };
 
 typedef struct Task {
@@ -26,6 +27,7 @@ typedef struct Task {
   enum TaskState state;
   uint64_t id;
   const char *name;
+  uint64_t wake_tick;
 } Task;
 
 Task *task_create(void (*fn)(void *), void *arg, const char *name);

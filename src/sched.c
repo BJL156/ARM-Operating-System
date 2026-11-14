@@ -1,6 +1,8 @@
 #include "sched.h"
 
+#include "irq.h"
 #include "panic.h"
+#include "timer.h"
 
 static Task boot_task;
 static Task *current;
@@ -27,6 +29,8 @@ void sched_add(Task *task) {
 }
 
 void yield(void) {
+  uint64_t flags = irq_save();
+
   Task *prev = current;
   Task *next = prev->next;
 
@@ -39,19 +43,51 @@ void yield(void) {
       panic("Sched: no runnable tasks.");
     }
 
+    irq_restore(flags);
     return;
   }
 
   if (prev->state == TASK_RUNNING) {
     prev->state = TASK_READY;
   }
-
   next->state = TASK_RUNNING;
   current = next;
 
   cpu_switch_to(&prev->ctx, &next->ctx);
+
+  irq_restore(flags);
 }
 
 Task *sched_current(void) {
   return current;
+}
+
+static uint64_t ticks;
+
+void sched_tick(void) {
+  ticks++;
+
+  Task *task = &boot_task;
+  do {
+    if (task->state == TASK_SLEEPING && ticks >= task->wake_tick) {
+      task->state = TASK_READY;
+    }
+    task = task->next;
+  } while (task != &boot_task);
+}
+
+void task_sleep_ms(uint64_t ms) {
+  uint64_t flags = irq_save();
+
+  uint64_t delta = (ms * TICK_HZ + 999) / 1000;
+  if (delta == 0) {
+    delta = 1;
+  }
+
+  current->wake_tick = ticks + delta;
+  current->state = TASK_SLEEPING;
+
+  yield();
+
+  irq_restore(flags);
 }

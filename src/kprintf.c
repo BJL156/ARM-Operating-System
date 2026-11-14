@@ -1,10 +1,12 @@
 #include "kprintf.h"
 
+#include "irq.h"
 #include "uart.h"
 
 void kprintf(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
+  uint64_t flags = irq_save();
 
   for (int i = 0; fmt[i] != '\0'; i++) {
     if (fmt[i] != '%') {
@@ -78,5 +80,6 @@ void kprintf(const char *fmt, ...) {
     }
   }
 
+  irq_restore(flags);
   va_end(ap);
 }

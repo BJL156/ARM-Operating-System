@@ -9,4 +9,7 @@ void yield(void);
 
 Task *sched_current(void);
 
+void sched_tick(void);
+void task_sleep_ms(uint64_t ms);
+
 #endif
