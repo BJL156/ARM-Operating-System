@@ -9,3 +9,5 @@ build/
 
 *.exe
 *.out
+
+compile_commands.json
