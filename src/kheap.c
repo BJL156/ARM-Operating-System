@@ -1,6 +1,6 @@
 #include "kheap.h"
 
-#include "kprintf.h"
+#include "irq.h"
 #include "panic.h"
 
 typedef struct Block {
@@ -45,7 +45,7 @@ static void split_block(Block *block, size_t size) {
   block->next = rest;
 }
 
-void *kmalloc(size_t size) {
+static void *kmalloc_unlocked(size_t size) {
   if (size == 0) {
     return NULL;
   }
@@ -68,6 +68,14 @@ void *kmalloc(size_t size) {
   return NULL;
 }
 
+void *kmalloc(size_t size) {
+  uint64_t flags = irq_save();
+  void *ptr = kmalloc_unlocked(size);
+  irq_restore(flags);
+
+  return ptr;
+}
+
 static void coalesce(void) {
   Block *block = heap_head;
 
@@ -81,7 +89,7 @@ static void coalesce(void) {
   }
 }
 
-void kfree(void *ptr) {
+static void kfree_unlocked(void *ptr) {
   if (ptr == NULL) {
     return;
   }
@@ -103,4 +111,10 @@ void kfree(void *ptr) {
 
   block->free = 1;
   coalesce();
+}
+
+void kfree(void *ptr) {
+  uint64_t flags = irq_save();
+  kfree_unlocked(ptr);
+  irq_restore(flags);
 }

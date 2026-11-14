@@ -18,7 +18,7 @@ void sched_init(void) {
   tail = &boot_task;
 }
 
-void sched_add(Task *task) {
+static void sched_add_unlocked(Task *task) {
   if (task == NULL) {
     panic("Sched: NULL task.");
   }
@@ -26,6 +26,12 @@ void sched_add(Task *task) {
   task->next = tail->next;
   tail->next = task;
   tail = task;
+}
+
+void sched_add(Task *task) {
+  uint64_t flags = irq_save();
+  sched_add_unlocked(task);
+  irq_restore(flags);
 }
 
 void yield(void) {
