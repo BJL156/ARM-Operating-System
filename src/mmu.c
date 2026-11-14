@@ -1,6 +1,7 @@
 #include "mmu.h"
 
 #include "kprintf.h"
+#include "memmap.h"
 #include "panic.h"
 #include "pmm.h"
 #include "sysreg.h"
@@ -10,11 +11,8 @@
 
 extern char __text_start[], __text_end[];
 extern char __rodata_start[], __rodata_end[];
+extern char __user_start[], __user_end[];
 extern char __data_start[], __kernel_end[];
-
-#define RAM_BASE 0x40000000UL
-#define RAM_SIZE (128UL * 1024 * 1024)
-#define RAM_END  (RAM_BASE + RAM_SIZE)
 
 #define GICD_PHYS 0x08000000UL
 #define GICC_PHYS 0x08010000UL
@@ -124,7 +122,13 @@ void mmu_init(void) {
             __rodata_end - __rodata_start, MAP_RO);
 
   map_range(l1, (uint64_t)__data_start, (uint64_t)__data_start,
-            RAM_END - (uint64_t)__data_start, MAP_RW);
+          USER_START - (uint64_t)__data_start, MAP_RW);
+  
+  map_range(l1, USER_START, USER_START, USER_SIZE, MAP_URW);
+  map_range(l1, HEAP_START, HEAP_START, HEAP_SIZE, MAP_RW);
+
+  map_range(l1, (uint64_t)__user_start, (uint64_t)__user_start,
+          __user_end - __user_start, MAP_URX);
 
   map_range(l1, GICD_PHYS, GICD_PHYS, 0x1000, MAP_DEV);
   map_range(l1, GICC_PHYS, GICC_PHYS, 0x2000, MAP_DEV);

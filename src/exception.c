@@ -5,6 +5,7 @@
 #include "trap.h"
 #include "panic.h"
 #include "sched.h"
+#include "syscall.h"
 
 #include <stdint.h>
 
@@ -41,7 +42,7 @@ static const char *esr_class_name(uint64_t ec) {
 }
 
 void exception_handler(TrapFrame *tf, uint64_t idx) {
-  if (idx == 5) {
+  if (idx == 5 || idx == 9) {
     uint32_t id = gic_ack();
 
     if (id == 1023) {
@@ -61,10 +62,18 @@ void exception_handler(TrapFrame *tf, uint64_t idx) {
     return;
   }
 
-  kprintf("EXCEPTION: slot %lu\n", idx);
-
   uint64_t esr = READ_SYSREG(esr_el1);
   uint64_t ec = (esr >> 26) & 0x3F;
+
+  if (idx == 8) {
+    if (ec == 0x15) {
+      syscall_dispatch(tf);
+      return;
+    }
+    user_fault(tf, esr);
+  }
+
+  kprintf("EXCEPTION: slot %lu\n", idx);
   kprintf("ESR_EL1: 0x%lX\n", esr);
   kprintf("DFSC: 0x%lX\n", esr & 0x3F);
   kprintf("CLASS: 0x%lx (%s)\n", ec, esr_class_name(ec));

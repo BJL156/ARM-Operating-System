@@ -42,6 +42,12 @@
 #define MAP_DEV (PTE_AF | PTE_ATTR(MAIR_IDX_DEVICE) | \
                 PTE_PXN | PTE_UXN)
 
+#define MAP_URX (PTE_AF | PTE_SH_INNER | PTE_ATTR(MAIR_IDX_NORMAL) | \
+                PTE_AP_EL0 | PTE_AP_RO | PTE_PXN)
+
+#define MAP_URW (PTE_AF | PTE_SH_INNER | PTE_ATTR(MAIR_IDX_NORMAL) | \
+                PTE_AP_EL0 | PTE_PXN | PTE_UXN)
+
 #define MAIR_IDX_DEVICE 0
 #define MAIR_IDX_NORMAL 1
 #define MAIR_ATTR_DEVICE_nGnRnE 0x00UL

@@ -1,39 +1,30 @@
 #include "gic.h"
 #include "kheap.h"
 #include "kprintf.h"
+#include "memmap.h"
 #include "mmu.h"
 #include "pmm.h"
 #include "sched.h"
 #include "sysreg.h"
 #include "task.h"
 #include "timer.h"
+#include "user.h"
 
 #include <stddef.h>
 #include <stdint.h>
-
-#define RAM_BASE 0x40000000UL
-#define RAM_SIZE (128UL * 1024 * 1024)
-#define RAM_END  (RAM_BASE + RAM_SIZE)
-
-#define HEAP_SIZE  (4UL * 1024 * 1024)
-#define HEAP_START (RAM_END - HEAP_SIZE)
 
 #define TIMER_IRQ 30
 
 extern char _start[];
 extern char __kernel_end[];
 
-static void shortlived(void *arg) {
-  kprintf("Short task %lu running.\n", (uint64_t)arg);
-}
+extern void user_hello(void), user_bad(void);
 
-static void spawner(void *arg) {
+static void heartbeat(void *arg) {
   (void)arg;
-  for (uint64_t i = 0; i < 6; i++) {
-    Task *t = task_create(shortlived, (void *)i, "short");
-    kprintf("Created task at %p.\n", (void *)t);
-    sched_add(t);
-    task_sleep_ms(300);
+  for (uint64_t i = 0; ; i++) {
+    kprintf("heartbeat %lu\n", i);
+    task_sleep_ms(500);
   }
 }
 
@@ -45,7 +36,7 @@ void kernel_main(void) {
   kprintf("Kernel end:   %p\n", (void *)__kernel_end);
   kprintf("Heap:         %p - %p\n", (void *)HEAP_START, (void *)RAM_END);
 
-  pmm_init((uintptr_t)__kernel_end, HEAP_START);
+  pmm_init((uintptr_t)__kernel_end, USER_START);
   kprintf("Free pages:   %lu\n", pmm_free_count());
 
   kheap_init(HEAP_START, HEAP_SIZE);
@@ -53,7 +44,9 @@ void kernel_main(void) {
   mmu_init();
 
   sched_init();
-  sched_add(task_create(spawner, NULL, "spawner"));
+  sched_add(task_create(user_launch, (void *)user_hello, "hello"));
+  sched_add(task_create(user_launch, (void *)user_bad, "bad"));
+  sched_add(task_create(heartbeat, NULL, "beat"));
 
   gic_init();
   gic_enable_irq(TIMER_IRQ);
