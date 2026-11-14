@@ -1,6 +1,7 @@
 #include "sched.h"
 
 #include "irq.h"
+#include "kheap.h"
 #include "panic.h"
 #include "timer.h"
 
@@ -94,6 +95,33 @@ void task_sleep_ms(uint64_t ms) {
   current->state = TASK_SLEEPING;
 
   yield();
+
+  irq_restore(flags);
+}
+
+void sched_reap(void) {
+  uint64_t flags = irq_save();
+
+  Task *prev = &boot_task;
+  Task *t = boot_task.next;
+
+  while (t != &boot_task) {
+    Task *next = t->next;
+
+    if (t->state == TASK_DEAD && t != current) {
+      prev->next = next;
+      if (tail == t) {
+        tail = prev;
+      }
+
+      kfree(t->stack);
+      kfree(t);
+    } else {
+      prev = t;
+    }
+
+    t = next;
+  }
 
   irq_restore(flags);
 }

@@ -23,12 +23,17 @@
 extern char _start[];
 extern char __kernel_end[];
 
-static void worker(void *arg) {
-  const char *name = arg;
-  uint64_t period = (name[0] == 'A') ? 200 : 500;
-  for (uint64_t i = 0; ; i++) {
-    kprintf("%s: %lu\n", name, i);
-    task_sleep_ms(period);
+static void shortlived(void *arg) {
+  kprintf("Short task %lu running.\n", (uint64_t)arg);
+}
+
+static void spawner(void *arg) {
+  (void)arg;
+  for (uint64_t i = 0; i < 6; i++) {
+    Task *t = task_create(shortlived, (void *)i, "short");
+    kprintf("Created task at %p.\n", (void *)t);
+    sched_add(t);
+    task_sleep_ms(300);
   }
 }
 
@@ -48,8 +53,7 @@ void kernel_main(void) {
   mmu_init();
 
   sched_init();
-  sched_add(task_create(worker, "A", "A"));
-  sched_add(task_create(worker, "B", "B"));
+  sched_add(task_create(spawner, NULL, "spawner"));
 
   gic_init();
   gic_enable_irq(TIMER_IRQ);
@@ -57,6 +61,7 @@ void kernel_main(void) {
   asm volatile("msr daifclr, #2");
 
   while (1) {
+    sched_reap();
     asm volatile("wfi");
   }
 }

@@ -12,4 +12,6 @@ Task *sched_current(void);
 void sched_tick(void);
 void task_sleep_ms(uint64_t ms);
 
+void sched_reap(void);
+
 #endif
