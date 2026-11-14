@@ -22,10 +22,10 @@ The operating system is currently in its early stages, with development focused 
 - [x] MMU
 - [x] Context switching and tasks
 - [x] Preemptive round-robin scheduler
-- [x] Task sleeping & dead task reaping
+- [x] Task sleeping and dead task reaping
 - [x] User mode (EL0) execution
 - [x] System calls (`write`, `sleep`, `exit`)
-- [x] User pointer validation & fault isolation[
+- [x] User pointer validation and fault isolation[
 
 ## Build
 > [!NOTE]
