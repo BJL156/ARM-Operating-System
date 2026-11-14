@@ -3,41 +3,41 @@ CC      := $(CROSS)gcc
 LD      := $(CROSS)ld
 OBJDUMP := $(CROSS)objdump
 
-SRC    := src
 BUILD  := build
 KERNEL := $(BUILD)/kernel.elf
-
-USER_CFLAGS := -Wall -Wextra -O2 -g -mcpu=cortex-a72 -mgeneral-regs-only \
-               -ffreestanding -nostdlib -fno-pic -fno-pie -fno-stack-protector -Isrc
-USER_ELFS := $(BUILD)/user/hello.elf
 
 CFLAGS := -Wall -Wextra -O2 -g \
           -mcpu=cortex-a72 -mgeneral-regs-only \
           -ffreestanding -nostdlib -fno-pic -fno-pie -fno-stack-protector \
           -MMD -MP
 
-C_SRCS := $(wildcard $(SRC)/*.c)
-S_SRCS := $(wildcard $(SRC)/*.S)
-OBJS   := $(C_SRCS:$(SRC)/%.c=$(BUILD)/%.c.o) $(S_SRCS:$(SRC)/%.S=$(BUILD)/%.S.o)
-DEPS   := $(OBJS:.o=.d)
+K_C_SRCS := $(shell find kernel -name '*.c')
+K_S_SRCS := $(shell find kernel -name '*.S')
+K_OBJS   := $(K_C_SRCS:%.c=$(BUILD)/%.c.o) $(K_S_SRCS:%.S=$(BUILD)/%.S.o)
+K_INC    := $(addprefix -I,$(sort $(dir $(K_C_SRCS) $(K_S_SRCS)))) -Iinclude
 
-QEMU := qemu-system-aarch64
+USER_CFLAGS := $(CFLAGS) -Iuser -Iinclude
+USER_ELFS   := $(BUILD)/user/hello.elf
+
+DEPS := $(K_OBJS:.o=.d) $(USER_ELFS:.elf=.d)
+
+QEMU       := qemu-system-aarch64
 QEMU_FLAGS := -machine virt,gic-version=2 -cpu cortex-a72 -m 128M -nographic -kernel $(KERNEL)
 
 .PHONY: all run debug dump clean
 
 all: $(KERNEL)
 
-$(KERNEL): $(OBJS) linker.ld
-	$(LD) -T linker.ld -o $@ $(OBJS)
+$(KERNEL): $(K_OBJS) kernel/linker.ld
+	$(LD) -T kernel/linker.ld -o $@ $(K_OBJS)
 
-$(BUILD)/%.c.o: $(SRC)/%.c
-	@mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD)/%.c.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(K_INC) -c $< -o $@
 
-$(BUILD)/%.S.o: $(SRC)/%.S
-	@mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD)/%.S.o: %.S
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(K_INC) -c $< -o $@
 
 $(BUILD)/user/%.o: user/%.c
 	@mkdir -p $(dir $@)
@@ -46,7 +46,7 @@ $(BUILD)/user/%.o: user/%.c
 $(BUILD)/user/%.elf: $(BUILD)/user/%.o user/user.ld
 	$(LD) -T user/user.ld -z max-page-size=4096 -o $@ $<
 
-$(BUILD)/userprogs.S.o: $(USER_ELFS)
+$(BUILD)/kernel/proc/userprogs.S.o: $(USER_ELFS)
 
 run: $(KERNEL)
 	$(QEMU) $(QEMU_FLAGS)

@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include "syscall.h"
+#include "syscall_abi.h"
 
 #define USER_INLINE static inline __attribute__((always_inline))
 
