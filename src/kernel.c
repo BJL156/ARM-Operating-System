@@ -3,7 +3,9 @@
 #include "kprintf.h"
 #include "mmu.h"
 #include "pmm.h"
+#include "sched.h"
 #include "sysreg.h"
+#include "task.h"
 #include "timer.h"
 
 #include <stddef.h>
@@ -21,6 +23,14 @@
 extern char _start[];
 extern char __kernel_end[];
 
+static void worker(void *arg) {
+  const char *name = arg;
+  for (int i = 0; i < 5; i++) {
+    kprintf("%s: %d\n", name, i);
+    yield();
+  }
+}
+
 void kernel_main(void) {
   kprintf("Hello from ARM Operating System.\n");
   kprintf("Current EL: %lu\n", READ_SYSREG(CurrentEL) >> 2);
@@ -35,6 +45,14 @@ void kernel_main(void) {
   kheap_init(HEAP_START, HEAP_SIZE);
 
   mmu_init();
+
+  sched_init();
+  sched_add(task_create(worker, "A", "A"));
+  sched_add(task_create(worker, "B", "B"));
+
+  for (int i = 0; i < 12; i++) {
+    yield();
+  }
 
   gic_init();
   gic_enable_irq(TIMER_IRQ);
