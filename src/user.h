@@ -5,7 +5,6 @@
 
 void enter_user(uint64_t entry, uint64_t sp) __attribute__((noreturn));
 
-uint64_t user_stack_alloc(void);
 void user_launch(void *arg);
 
 #endif

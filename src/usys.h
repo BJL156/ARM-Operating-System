@@ -34,4 +34,8 @@ USER_INLINE void usys_exit(long code) {
   }
 }
 
+USER_INLINE long usys_getpid(void) {
+  return usys_call3(SYS_GETPID, 0, 0, 0);
+}
+
 #endif

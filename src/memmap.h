@@ -8,7 +8,4 @@
 #define HEAP_SIZE  (4UL * 1024 * 1024)
 #define HEAP_START (RAM_END - HEAP_SIZE)
 
-#define USER_SIZE  (1UL * 1024 * 1024)
-#define USER_START (HEAP_START - USER_SIZE)
-
 #endif

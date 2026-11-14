@@ -11,7 +11,6 @@
 
 extern char __text_start[], __text_end[];
 extern char __rodata_start[], __rodata_end[];
-extern char __user_start[], __user_end[];
 extern char __data_start[], __kernel_end[];
 
 #define GICD_PHYS 0x08000000UL
@@ -73,6 +72,7 @@ void map_page(uint64_t *l1, uint64_t va, uint64_t pa, uint64_t flags) {
   }
 
   if (*entry & PTE_VALID) {
+    kprintf("MMU: page already mapped: 0x%lx.\n", va);
     panic("MMU: page already mapped.");
   }
 
@@ -110,11 +110,19 @@ static void show_entry(const char *name, uint64_t l1[], uint64_t va) {
   }
 }
 
+static uint64_t *kernel_l1;
+
+uint64_t *mmu_kernel_l1(void) {
+  return kernel_l1;
+}
+
 void mmu_init(void) {
   uint64_t *l1 = pmm_alloc_zeroed();
   if (l1 == NULL) {
     panic("MMU: out of memory for L1 table.");
   }
+
+  kernel_l1 = l1;
 
   map_range(l1, (uint64_t)__text_start, (uint64_t)__text_start,
             __text_end - __text_start, MAP_RX);
@@ -122,13 +130,7 @@ void mmu_init(void) {
             __rodata_end - __rodata_start, MAP_RO);
 
   map_range(l1, (uint64_t)__data_start, (uint64_t)__data_start,
-          USER_START - (uint64_t)__data_start, MAP_RW);
-  
-  map_range(l1, USER_START, USER_START, USER_SIZE, MAP_URW);
-  map_range(l1, HEAP_START, HEAP_START, HEAP_SIZE, MAP_RW);
-
-  map_range(l1, (uint64_t)__user_start, (uint64_t)__user_start,
-          __user_end - __user_start, MAP_URX);
+            RAM_END - (uint64_t)__data_start, MAP_RW);
 
   map_range(l1, GICD_PHYS, GICD_PHYS, 0x1000, MAP_DEV);
   map_range(l1, GICC_PHYS, GICC_PHYS, 0x2000, MAP_DEV);
@@ -145,4 +147,8 @@ void mmu_init(void) {
   asm volatile("isb");
 
   mmu_enable();
+}
+
+uint64_t *mmu_lookup(uint64_t *l1, uint64_t va) {
+  return walk(l1, va, 0);
 }

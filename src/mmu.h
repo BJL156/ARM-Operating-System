@@ -48,6 +48,9 @@
 #define MAP_URW (PTE_AF | PTE_SH_INNER | PTE_ATTR(MAIR_IDX_NORMAL) | \
                 PTE_AP_EL0 | PTE_PXN | PTE_UXN)
 
+#define MAP_URO (PTE_AF | PTE_SH_INNER | PTE_ATTR(MAIR_IDX_NORMAL) | \
+                PTE_AP_EL0 | PTE_AP_RO | PTE_PXN | PTE_UXN)
+
 #define MAIR_IDX_DEVICE 0
 #define MAIR_IDX_NORMAL 1
 #define MAIR_ATTR_DEVICE_nGnRnE 0x00UL
@@ -72,6 +75,9 @@ void map_page(uint64_t *l1, uint64_t va, uint64_t pa, uint64_t flags);
 void map_range(uint64_t *l1, uint64_t va, uint64_t pa, uint64_t size, uint64_t flags);
 
 void mmu_enable(void);
+uint64_t *mmu_kernel_l1(void);
 void mmu_init(void);
+
+uint64_t *mmu_lookup(uint64_t *l1, uint64_t va);
 
 #endif

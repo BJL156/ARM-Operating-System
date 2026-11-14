@@ -1,5 +1,6 @@
 #include "sched.h"
 
+#include "aspace.h"
 #include "irq.h"
 #include "kheap.h"
 #include "panic.h"
@@ -14,6 +15,7 @@ void sched_init(void) {
   boot_task.name = "boot";
   boot_task.id = 0;
   boot_task.next = &boot_task;
+  boot_task.aspace = aspace_kernel();
   
   current = &boot_task;
   tail = &boot_task;
@@ -60,6 +62,10 @@ void yield(void) {
   next->state = TASK_RUNNING;
   current = next;
 
+  if (next->aspace != prev->aspace) {
+    aspace_switch(next->aspace);
+  }
+
   cpu_switch_to(&prev->ctx, &next->ctx);
 
   irq_restore(flags);
@@ -103,24 +109,28 @@ void sched_reap(void) {
   uint64_t flags = irq_save();
 
   Task *prev = &boot_task;
-  Task *t = boot_task.next;
+  Task *task = boot_task.next;
 
-  while (t != &boot_task) {
-    Task *next = t->next;
+  while (task != &boot_task) {
+    Task *next = task->next;
 
-    if (t->state == TASK_DEAD && t != current) {
+    if (task->state == TASK_DEAD && task != current) {
       prev->next = next;
-      if (tail == t) {
+      if (tail == task) {
         tail = prev;
       }
 
-      kfree(t->stack);
-      kfree(t);
+      if (task->aspace != aspace_kernel()) {
+        aspace_destroy(task->aspace);
+      }
+
+      kfree(task->stack);
+      kfree(task);
     } else {
-      prev = t;
+      prev = task;
     }
 
-    t = next;
+    task = next;
   }
 
   irq_restore(flags);

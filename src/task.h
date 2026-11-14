@@ -1,6 +1,8 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include "aspace.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -28,6 +30,9 @@ typedef struct Task {
   uint64_t id;
   const char *name;
   uint64_t wake_tick;
+  ASpace *aspace;
+  uint64_t user_entry;
+  uint64_t user_sp;
 } Task;
 
 Task *task_create(void (*fn)(void *), void *arg, const char *name);

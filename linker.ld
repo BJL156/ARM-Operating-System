@@ -18,14 +18,6 @@ SECTIONS {
   . = ALIGN(4096);
   __rodata_end = .;
 
-  __user_start = .;
-  .user : ALIGN(4096) {
-    *(.user.text*)
-    *(.user.rodata*)
-  }
-  . = ALIGN(4096);
-  __user_end = .;
-
   __data_start = .;
   .data : {
     *(.data*)

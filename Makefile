@@ -7,6 +7,10 @@ SRC    := src
 BUILD  := build
 KERNEL := $(BUILD)/kernel.elf
 
+USER_CFLAGS := -Wall -Wextra -O2 -g -mcpu=cortex-a72 -mgeneral-regs-only \
+               -ffreestanding -nostdlib -fno-pic -fno-pie -fno-stack-protector -Isrc
+USER_ELFS := $(BUILD)/user/hello.elf
+
 CFLAGS := -Wall -Wextra -O2 -g \
           -mcpu=cortex-a72 -mgeneral-regs-only \
           -ffreestanding -nostdlib -fno-pic -fno-pie -fno-stack-protector \
@@ -34,6 +38,15 @@ $(BUILD)/%.c.o: $(SRC)/%.c
 $(BUILD)/%.S.o: $(SRC)/%.S
 	@mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/user/%.o: user/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(USER_CFLAGS) -c $< -o $@
+
+$(BUILD)/user/%.elf: $(BUILD)/user/%.o user/user.ld
+	$(LD) -T user/user.ld -z max-page-size=4096 -o $@ $<
+
+$(BUILD)/userprogs.S.o: $(USER_ELFS)
 
 run: $(KERNEL)
 	$(QEMU) $(QEMU_FLAGS)

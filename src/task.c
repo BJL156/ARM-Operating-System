@@ -23,6 +23,8 @@ Task *task_create(void (*fn)(void *), void *arg, const char *name) {
 
   memset(task, 0, sizeof(Task));
 
+  task->aspace = aspace_kernel();
+
   task->stack = stack;
   task->state = TASK_READY;
   task->id    = next_task_id++;
