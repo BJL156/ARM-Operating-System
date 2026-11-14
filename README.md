@@ -12,12 +12,20 @@ The operating system is currently in its early stages, with development focused 
 ### Features
 - [x] Bootloader
 - [x] UART
+- [x] Kernel `printf` (`kprintf`)
 - [x] Exception handling
 - [x] GIC
 - [x] Timer
-- [x] Memory functions (`memcpy`, `memmove`, `memset`)
+- [x] Memory functions (`memcpy`, `memmove`, `memset`, `memcmp`)
 - [x] PMM
+- [x] Kernel heap (`kmalloc`, `kfree`)
 - [x] MMU
+- [x] Context switching and tasks
+- [x] Preemptive round-robin scheduler
+- [x] Task sleeping & dead task reaping
+- [x] User mode (EL0) execution
+- [x] System calls (`write`, `sleep`, `exit`)
+- [x] User pointer validation & fault isolation[
 
 ## Build
 > [!NOTE]
