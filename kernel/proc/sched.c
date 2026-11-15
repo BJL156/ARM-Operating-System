@@ -135,3 +135,25 @@ void sched_reap(void) {
 
   irq_restore(flags);
 }
+
+void sched_block(const void *chan) {
+  current->wait_chan = chan;
+  current->state = TASK_BLOCKED;
+  yield();
+}
+
+void sched_wake(const void *chan) {
+  uint64_t flags = irq_save();
+
+  Task *task = &boot_task;
+
+  do {
+    if (task->state == TASK_BLOCKED && task->wait_chan == chan) {
+      task->state = TASK_READY;
+      task->wait_chan = NULL;
+    }
+    task = task->next;
+  } while (task != &boot_task);
+
+  irq_restore(flags);
+}

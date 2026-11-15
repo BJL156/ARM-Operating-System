@@ -11,6 +11,8 @@
 #define GICC_IAR  (*(volatile uint32_t *)(GICC_BASE + 0x00C))
 #define GICC_EOIR (*(volatile uint32_t *)(GICC_BASE + 0x010))
 
+#define GICD_ITARGETSR(n) (*(volatile uint8_t *)(GICD_BASE + 0x800 + (n)))
+
 void gic_init(void) {
   GICD_CTLR = 1;
   GICC_PMR = 0xFF;
@@ -31,4 +33,8 @@ uint32_t gic_ack() {
 
 void gic_eoi(uint32_t id) {
   GICC_EOIR = id;
+}
+
+void gic_route_to_cpu0(uint32_t id) {
+  GICD_ITARGETSR(id) = 0x01;
 }

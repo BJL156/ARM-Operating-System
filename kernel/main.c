@@ -9,6 +9,7 @@
 #include "sysreg.h"
 #include "task.h"
 #include "timer.h"
+#include "uart.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -24,6 +25,15 @@ static void heartbeat(void *arg) {
   for (uint64_t i = 0; ; i++) {
     kprintf("heartbeat %lu, free pages %lu\n", i, pmm_free_count());
     task_sleep_ms(1000);
+  }
+}
+
+static void keyecho(void *arg) {
+  const char *name = arg;
+  for (;;) {
+    int c = uart_getc();
+    kprintf("%s got 0x%x\n", name, c);
+    task_sleep_ms(300);
   }
 }
 
@@ -44,11 +54,17 @@ void kernel_main(void) {
 
   sched_init();
   size_t hello_size = hello_elf_end - hello_elf_start;
-  sched_add(process_create(hello_elf_start, hello_size, "p1"));
-  sched_add(process_create(hello_elf_start, hello_size, "p2"));
+  // sched_add(process_create(hello_elf_start, hello_size, "p1"));
+  // sched_add(process_create(hello_elf_start, hello_size, "p2"));
+  // sched_add(task_create(heartbeat, NULL, "beat"));
+  sched_add(task_create(keyecho, "A", "A"));
+  sched_add(task_create(keyecho, "B", "B"));
   sched_add(task_create(heartbeat, NULL, "beat"));
 
   gic_init();
+  uart_rx_init();
+  gic_route_to_cpu0(UART_IRQ);
+  gic_enable_irq(UART_IRQ);
   gic_enable_irq(TIMER_IRQ);
   timer_start(timer_freq() / TICK_HZ);
   asm volatile("msr daifclr, #2");

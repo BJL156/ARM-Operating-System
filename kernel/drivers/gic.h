@@ -8,4 +8,6 @@ void gic_enable_irq(uint32_t id);
 uint32_t gic_ack();
 void gic_eoi(uint32_t id);
 
+void gic_route_to_cpu0(uint32_t id);
+
 #endif

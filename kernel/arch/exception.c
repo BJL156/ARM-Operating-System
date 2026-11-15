@@ -6,6 +6,7 @@
 #include "panic.h"
 #include "sched.h"
 #include "syscall.h"
+#include "uart.h"
 
 #include <stdint.h>
 
@@ -52,6 +53,12 @@ void exception_handler(TrapFrame *tf, uint64_t idx) {
     if (id == 30) {
       timer_start(timer_freq() / TICK_HZ);
       sched_tick();
+    }
+
+    if (id == UART_IRQ) {
+      uart_rx_irq();
+    } else if (id != 30) {
+      kprintf("unexpected IRQ %lu\n", (uint64_t)id);
     }
 
     gic_eoi(id);

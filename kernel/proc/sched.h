@@ -14,4 +14,7 @@ void task_sleep_ms(uint64_t ms);
 
 void sched_reap(void);
 
+void sched_block(const void *chan);
+void sched_wake(const void *chan);
+
 #endif

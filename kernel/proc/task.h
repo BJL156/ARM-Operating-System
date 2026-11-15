@@ -19,6 +19,7 @@ enum TaskState {
   TASK_READY,
   TASK_RUNNING,
   TASK_SLEEPING,
+  TASK_BLOCKED,
   TASK_DEAD,
 };
 
@@ -33,6 +34,7 @@ typedef struct Task {
   ASpace *aspace;
   uint64_t user_entry;
   uint64_t user_sp;
+  const void *wait_chan;
 } Task;
 
 Task *task_create(void (*fn)(void *), void *arg, const char *name);
