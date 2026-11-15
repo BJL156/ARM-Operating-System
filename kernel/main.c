@@ -28,15 +28,6 @@ static void heartbeat(void *arg) {
   }
 }
 
-static void keyecho(void *arg) {
-  const char *name = arg;
-  for (;;) {
-    int c = uart_getc();
-    kprintf("%s got 0x%x\n", name, c);
-    task_sleep_ms(300);
-  }
-}
-
 void kernel_main(void) {
   kprintf("Hello from ARM Operating System.\n");
   kprintf("Current EL: %lu\n", READ_SYSREG(CurrentEL) >> 2);
@@ -57,9 +48,8 @@ void kernel_main(void) {
   // sched_add(process_create(hello_elf_start, hello_size, "p1"));
   // sched_add(process_create(hello_elf_start, hello_size, "p2"));
   // sched_add(task_create(heartbeat, NULL, "beat"));
-  sched_add(task_create(keyecho, "A", "A"));
-  sched_add(task_create(keyecho, "B", "B"));
-  sched_add(task_create(heartbeat, NULL, "beat"));
+  extern char echo_elf_start[], echo_elf_end[];
+  sched_add(process_create(echo_elf_start, echo_elf_end - echo_elf_start, "echo"));
 
   gic_init();
   uart_rx_init();

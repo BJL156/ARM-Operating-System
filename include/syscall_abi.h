@@ -5,5 +5,6 @@
 #define SYS_SLEEP  2
 #define SYS_EXIT   3
 #define SYS_GETPID 4
+#define SYS_READ   5
 
 #endif

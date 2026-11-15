@@ -23,7 +23,6 @@ void gic_enable_irq(uint32_t id) {
   uint32_t reg = id / 32;
   uint32_t bit = id % 32;
 
-
   GICD_ISENABLER(reg) = (1U << bit);
 }
 

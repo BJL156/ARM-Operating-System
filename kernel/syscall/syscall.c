@@ -11,7 +11,7 @@ static long sys_write(const char *buf, uint64_t len) {
     len = 4096;
   }
 
-  if (!aspace_user_ok(sched_current()->aspace, (uint64_t)buf, len)) {
+  if (!aspace_user_ok(sched_current()->aspace, (uint64_t)buf, len, 0)) {
     kprintf("Syscall: bad user pointer from %s.\n", sched_current()->name);
     return -1;
   }
@@ -21,6 +21,32 @@ static long sys_write(const char *buf, uint64_t len) {
   }
 
   return (long)len;
+}
+
+static long sys_read(char *buf, uint64_t len) {
+  if (len > 4096) {
+    len = 4096;
+  }
+
+  if (len == 0) {
+    return 0;
+  }
+
+  if (!aspace_user_ok(sched_current()->aspace, (uint64_t)buf, len, 1)) {
+    kprintf("Syscall: bad user pointer from %s.\n", sched_current()->name);
+    return -1;
+  }
+
+  buf[0] = (char)uart_getc();
+  uint64_t n = 1;
+  while (n < len) {
+    int c = uart_getc_nb();
+    if (c < 0) {
+      break;
+    }
+    buf[n++] = (char)c;
+  }
+  return (long)n;
 }
 
 void syscall_dispatch(TrapFrame *trap_frame) {
@@ -44,6 +70,10 @@ void syscall_dispatch(TrapFrame *trap_frame) {
     }
     case SYS_GETPID: {
       ret = (long)sched_current()->id;
+      break;
+    }
+    case SYS_READ: {
+      ret = sys_read((char *)a0, a1);
       break;
     }
   }

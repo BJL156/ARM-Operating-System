@@ -44,7 +44,7 @@ void aspace_switch(ASpace *aspace) {
   asm volatile("isb");
 }
 
-int aspace_user_ok(ASpace *aspace, uint64_t va, uint64_t len) {
+int aspace_user_ok(ASpace *aspace, uint64_t va, uint64_t len, int write) {
   if (va < USER_VA_BASE || va > USER_VA_LIMIT || len > USER_VA_LIMIT - va) {
     return 0;
   }
@@ -58,7 +58,12 @@ int aspace_user_ok(ASpace *aspace, uint64_t va, uint64_t len) {
 
   for (uint64_t p = first; p <= last; p += 4096) {
     uint64_t *e = mmu_lookup(aspace->l1, p);
+
     if (e == NULL || !(*e & PTE_VALID) || !(*e & PTE_AP_EL0)) {
+      return 0;
+    }
+
+    if (write && (*e & PTE_AP_RO)) {
       return 0;
     }
   }

@@ -39,4 +39,8 @@ USER_INLINE long usys_getpid(void) {
   return usys_call3(SYS_GETPID, 0, 0, 0);
 }
 
+USER_INLINE long usys_read(char *buf, size_t len) {
+  return usys_call3(SYS_READ, (long)buf, (long)len, 0);
+}
+
 #endif

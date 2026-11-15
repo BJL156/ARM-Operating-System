@@ -7,3 +7,11 @@
 hello_elf_start:
   .incbin "build/user/hello.elf"
 hello_elf_end:
+
+.balign 16
+.global echo_elf_start
+.global echo_elf_end
+
+echo_elf_start:
+  .incbin "build/user/echo.elf"
+echo_elf_end:

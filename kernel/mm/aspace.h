@@ -15,7 +15,7 @@ ASpace *aspace_create(void);
 void aspace_map(ASpace *as, uint64_t va, uint64_t pa, uint64_t flags);
 void aspace_switch(ASpace *as);
 
-int aspace_user_ok(ASpace *aspace, uint64_t va, uint64_t len);
+int aspace_user_ok(ASpace *as, uint64_t va, uint64_t len, int write);
 
 void aspace_destroy(ASpace *aspace);
 
