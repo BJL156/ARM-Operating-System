@@ -43,4 +43,4 @@ make run
 This will automatically boot the OS using QEMU for virtualization.
 
 ## Current Limitations
-- Only can be ran on QEMU's virt platform.
+- Currently supports only QEMU's `virt` machine.
