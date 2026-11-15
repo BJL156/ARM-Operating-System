@@ -7,7 +7,7 @@ An operating system written from scratch for the AArch64 architecture. This proj
 
 The goal of this project is to be able to create user programs that can run using precompiled binaries that my own compiler and assembler produces.
 
-The operating system is currently in its early stages, with development focused on establishing the foundations for a functional operating system that can run user programs. AArch64 was chosen as the target ISA to continue from the [ARM tool chain](https://github.com/BJL156#aarch64-toolchain-roadmap) that I have been developing.
+AArch64 was chosen as the target ISA to continue from the [ARM tool chain](https://github.com/BJL156#aarch64-toolchain-roadmap) that I have been developing.
 
 ### Features
 - [x] Bootloader
@@ -43,5 +43,4 @@ make run
 This will automatically boot the OS using QEMU for virtualization.
 
 ## Current Limitations
-- Early-stage development.
 - Only can be ran on QEMU's virt platform.
