@@ -5,7 +5,7 @@
 
 An operating system written from scratch for the AArch64 architecture. This project aims to explore low-level system programming, operating system development, and the AArch64 architecture.
 
-The goal of this project is to be able to create user programs that can run using precompiled binaries that my own compiler and assembler produces.
+The goal of this project is to be able to run user programs that can run using precompiled binaries that my own compiler and assembler produces.
 
 AArch64 was chosen as the target ISA to continue from the [ARM tool chain](https://github.com/BJL156#aarch64-toolchain-roadmap) that I have been developing.
 
