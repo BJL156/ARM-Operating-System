@@ -1,13 +1,12 @@
-#include "usys.h"
-
-static char line[] = "pid ?: tick ?\n";
+#include "ulib.h"
 
 void _start(void) {
-  line[4] = '0' + usys_getpid();
-  for (int i = 0; i < 5; i++) {
-    line[12] = '0' + i;
-    usys_write(line, sizeof(line) - 1);
+  for (int i = 0; i < 3; i++) {
+    u_puts("hello from pid ");
+    u_putnum(usys_getpid());
+    u_puts("\r\n");
     usys_sleep(500);
   }
+
   usys_exit(0);
 }

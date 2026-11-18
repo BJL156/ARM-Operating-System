@@ -1,5 +1,6 @@
 #include "pmm.h"
 
+#include "irq.h"
 #include "panic.h"
 
 #include <stddef.h>
@@ -30,7 +31,7 @@ void pmm_init(uintptr_t start, uintptr_t end) {
   }
 }
 
-void *pmm_alloc(void) {
+static void *pmm_alloc_unlocked(void) {
   if (head == NULL) {
     return NULL;
   }
@@ -40,6 +41,13 @@ void *pmm_alloc(void) {
   free_page_count--;
 
   return (void *)page;
+}
+
+void *pmm_alloc(void) {
+  uint64_t flags = irq_save();
+  void *p = pmm_alloc_unlocked();
+  irq_restore(flags);
+  return p;
 }
 
 void *pmm_alloc_zeroed(void) {
@@ -55,7 +63,7 @@ void *pmm_alloc_zeroed(void) {
   return page;
 }
 
-void pmm_free(void *ptr) {
+static void pmm_free_unlocked(void *ptr) {
   if (ptr == NULL) {
     return;
   }
@@ -72,4 +80,10 @@ void pmm_free(void *ptr) {
 
 uint64_t pmm_free_count(void) {
   return free_page_count;
+}
+
+void pmm_free(void *page) {
+  uint64_t flags = irq_save();
+  pmm_free_unlocked(page);
+  irq_restore(flags);
 }

@@ -43,4 +43,12 @@ USER_INLINE long usys_read(char *buf, size_t len) {
   return usys_call3(SYS_READ, (long)buf, (long)len, 0);
 }
 
+USER_INLINE long usys_spawn(const char *name) {
+  return usys_call3(SYS_SPAWN, (long)name, 0, 0);
+}
+
+USER_INLINE long usys_wait(long pid) {
+  return usys_call3(SYS_WAIT, pid, 0, 0);
+}
+
 #endif

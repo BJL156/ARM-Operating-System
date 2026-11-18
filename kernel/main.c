@@ -5,6 +5,7 @@
 #include "mmu.h"
 #include "pmm.h"
 #include "process.h"
+#include "progs.h"
 #include "sched.h"
 #include "sysreg.h"
 #include "task.h"
@@ -41,15 +42,9 @@ void kernel_main(void) {
   kheap_init(HEAP_START, HEAP_SIZE);
   mmu_init();
 
-  kprintf("baseline free pages: %lu\n", pmm_free_count());
-
   sched_init();
-  size_t hello_size = hello_elf_end - hello_elf_start;
-  // sched_add(process_create(hello_elf_start, hello_size, "p1"));
-  // sched_add(process_create(hello_elf_start, hello_size, "p2"));
-  // sched_add(task_create(heartbeat, NULL, "beat"));
-  extern char echo_elf_start[], echo_elf_end[];
-  sched_add(process_create(echo_elf_start, echo_elf_end - echo_elf_start, "echo"));
+  const Prog *sh = prog_find("sh");
+  sched_add(process_create(sh->start, sh->end - sh->start, "sh"));
 
   gic_init();
   uart_rx_init();

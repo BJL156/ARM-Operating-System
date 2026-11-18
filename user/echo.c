@@ -1,3 +1,4 @@
+#include "ulib.h"
 #include "usys.h"
 
 void _start(void) {
@@ -5,6 +6,11 @@ void _start(void) {
   for (;;) {
     if (usys_read(&c, 1) != 1) {
       continue;
+    }
+
+    if (c == 0x03 || c == 0x04) {
+      u_puts("\r\n");
+      usys_exit(0);
     }
 
     if (c == '\r' || c == '\n') {

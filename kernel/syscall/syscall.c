@@ -1,9 +1,14 @@
 #include "syscall.h"
+
+#include "aspace.h"
 #include "kprintf.h"
+#include "irq.h"
 #include "memmap.h"
 #include "sched.h"
 #include "sysreg.h"
 #include "task.h"
+#include "process.h"
+#include "progs.h"
 #include "uart.h"
 
 static long sys_write(const char *buf, uint64_t len) {
@@ -49,6 +54,62 @@ static long sys_read(char *buf, uint64_t len) {
   return (long)n;
 }
 
+static long copy_user_str(char *dst, int max, const char *src) {
+  ASpace *aspace = sched_current()->aspace;
+
+  for (int i = 0; i < max; i++) {
+    if (!aspace_user_ok(aspace, (uint64_t)src + i, 1, 0)) {
+      return -1;
+    }
+
+    dst[i] = src[i];
+    if (dst[i] == '\0') {
+      return (long)i;
+    }
+  }
+
+  return -1;
+}
+
+static long sys_spawn(const char *uname) {
+  char name[32];
+  if (copy_user_str(name, sizeof(name), uname) < 0) {
+    return -1;
+  }
+
+  const Prog *prog = prog_find(name);
+  if (prog == NULL) {
+    return -1;
+  }
+
+  Task *task = process_create(prog->start, prog->end - prog->start, prog->name);
+  if (task == NULL) {
+    return -1;
+  }
+
+  uint64_t id = task->id;
+  sched_add(task);
+
+  return (long)id;
+}
+
+static long sys_wait(uint64_t pid) {
+  if (pid == 0 || pid == sched_current()->id) {
+    return -1;
+  }
+
+  uint64_t flags = irq_save();
+  Task *task;
+
+  while ((task = sched_find(pid)) != NULL && task->state != TASK_DEAD) {
+    sched_block(task);
+  }
+
+  irq_restore(flags);
+
+  return 0;
+}
+
 void syscall_dispatch(TrapFrame *trap_frame) {
   uint64_t a0 = trap_frame->x[0];
   uint64_t a1 = trap_frame->x[1];
@@ -74,6 +135,14 @@ void syscall_dispatch(TrapFrame *trap_frame) {
     }
     case SYS_READ: {
       ret = sys_read((char *)a0, a1);
+      break;
+    }
+    case SYS_SPAWN: {
+      ret = sys_spawn((const char *)a0);
+      break;
+    }
+    case SYS_WAIT: {
+      ret = sys_wait(a0);
       break;
     }
   }

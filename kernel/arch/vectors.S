@@ -47,6 +47,8 @@ exception_entry:
   mrs x2, elr_el1
   mrs x3, spsr_el1
   stp x2, x3, [sp, #248]
+  mrs x2, sp_el0
+  str x2, [sp, #264]
 
   mov x0, sp
   bl exception_handler
@@ -55,6 +57,8 @@ exception_return:
   ldp x2, x3, [sp, #248]
   msr elr_el1, x2
   msr spsr_el1, x3
+  ldr x2, [sp, #264]
+  msr sp_el0, x2
 
   ldp x2, x3, [sp, #16]
   ldp x4, x5, [sp, #32]

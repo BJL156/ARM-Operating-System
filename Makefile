@@ -17,7 +17,7 @@ K_OBJS   := $(K_C_SRCS:%.c=$(BUILD)/%.c.o) $(K_S_SRCS:%.S=$(BUILD)/%.S.o)
 K_INC    := $(addprefix -I,$(sort $(dir $(K_C_SRCS) $(K_S_SRCS)))) -Iinclude
 
 USER_CFLAGS := $(CFLAGS) -Iuser -Iinclude
-USER_ELFS   := $(BUILD)/user/hello.elf $(BUILD)/user/echo.elf
+USER_ELFS   := $(BUILD)/user/hello.elf $(BUILD)/user/echo.elf $(BUILD)/user/shell.elf
 
 DEPS := $(K_OBJS:.o=.d) $(USER_ELFS:.elf=.d)
 

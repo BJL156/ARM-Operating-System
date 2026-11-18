@@ -17,4 +17,6 @@ void sched_reap(void);
 void sched_block(const void *chan);
 void sched_wake(const void *chan);
 
+Task *sched_find(uint64_t id);
+
 #endif

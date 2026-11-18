@@ -15,3 +15,11 @@ hello_elf_end:
 echo_elf_start:
   .incbin "build/user/echo.elf"
 echo_elf_end:
+
+.balign 16
+.global shell_elf_start
+.global shell_elf_end
+
+shell_elf_start:
+  .incbin "build/user/shell.elf"
+shell_elf_end:

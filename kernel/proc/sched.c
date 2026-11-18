@@ -157,3 +157,17 @@ void sched_wake(const void *chan) {
 
   irq_restore(flags);
 }
+
+Task *sched_find(uint64_t id) {
+  Task *task = &boot_task;
+
+  do {
+    if (task->id == id) {
+      return task;
+    }
+
+    task = task->next;
+  } while (task != &boot_task);
+
+  return NULL;
+}

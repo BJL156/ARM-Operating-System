@@ -43,6 +43,8 @@ void task_exit(void) {
   
   kprintf("Task %s exited.\n", task->name);
   task->state = TASK_DEAD;
+  sched_wake(task);
+
   yield();
 
   panic("Task: dead task resumed.");
