@@ -94,20 +94,24 @@ static long sys_spawn(const char *uname) {
 }
 
 static long sys_wait(uint64_t pid) {
-  if (pid == 0 || pid == sched_current()->id) {
-    return -1;
-  }
+  Task *me = sched_current();
 
+  long ret = -1;
   uint64_t flags = irq_save();
-  Task *task;
 
-  while ((task = sched_find(pid)) != NULL && task->state != TASK_DEAD) {
-    sched_block(task);
+  Task *task = sched_find(pid);
+  if (task != NULL && task->parent_id == me->id && !task->collected) {
+    while (task->state != TASK_DEAD) {
+      sched_block(task);
+    }
+
+    ret = task->exit_code;
+    task->collected = 1;
   }
 
   irq_restore(flags);
 
-  return 0;
+  return ret;
 }
 
 void syscall_dispatch(TrapFrame *trap_frame) {
@@ -126,6 +130,7 @@ void syscall_dispatch(TrapFrame *trap_frame) {
       break;
     }
     case SYS_EXIT: {
+      sched_current()->exit_code = (int)(a0 & 0xFF);
       kprintf("%s: exit(%ld)\n", sched_current()->name, (long)a0);
       task_exit();
     }
@@ -151,8 +156,9 @@ void syscall_dispatch(TrapFrame *trap_frame) {
 }
 
 void user_fault(TrapFrame *trap_frame, uint64_t esr) {
-  kprintf("User fault in %s: class 0x%lx, ESR 0x%lx\n",
-          sched_current()->name, (esr >> 26) & 0x3F, esr);
+  kprintf("User fault in %s: class 0x%lx, ESR 0x%lx\n", sched_current()->name, (esr >> 26) & 0x3F, esr);
   kprintf("  ELR 0x%lx, FAR 0x%lx\n", trap_frame->elr, READ_SYSREG(far_el1));
+
+  sched_current()->exit_code = 139;
   task_exit();
 }

@@ -58,6 +58,14 @@ void _start(void) {
       u_puts("Unknown program.\r\n");
       continue;
     }
-    usys_wait(pid);
+
+    long status = usys_wait(pid);
+    if (status < 0) {
+      u_puts("wait failed.\r\n");
+    } else if (status != 0) {
+      u_puts("Exit status ");
+      u_putnum((unsigned long)status);
+      u_puts(".\r\n");
+    }
   }
 }

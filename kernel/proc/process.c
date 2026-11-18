@@ -4,6 +4,7 @@
 #include "elf.h"
 #include "kprintf.h"
 #include "mmu.h"
+#include "sched.h"
 #include "pmm.h"
 #include "user.h"
 
@@ -31,6 +32,7 @@ Task *process_create(const void *image, size_t size, const char *name) {
   if (task == NULL) {
     return NULL;
   }
+  task->parent_id = sched_current()->id;
 
   task->aspace = aspace;
   task->user_entry = entry;

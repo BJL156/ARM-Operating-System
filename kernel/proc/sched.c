@@ -105,6 +105,20 @@ void task_sleep_ms(uint64_t ms) {
   irq_restore(flags);
 }
 
+static int reapable(Task *task) {
+  if (task->state != TASK_DEAD || task == current) {
+    return 0;
+  }
+
+  if (task->collected || task->parent_id == 0) {
+    return 1;
+  }
+
+  Task *parent = sched_find(task->parent_id);
+
+  return parent == NULL || parent->state == TASK_DEAD;
+}
+
 void sched_reap(void) {
   uint64_t flags = irq_save();
 
@@ -114,7 +128,7 @@ void sched_reap(void) {
   while (task != &boot_task) {
     Task *next = task->next;
 
-    if (task->state == TASK_DEAD && task != current) {
+    if (reapable(task)) {
       prev->next = next;
       if (tail == task) {
         tail = prev;
