@@ -19,15 +19,6 @@
 
 extern char _start[];
 extern char __kernel_end[];
-extern char hello_elf_start[], hello_elf_end[];
-
-static void heartbeat(void *arg) {
-  (void)arg;
-  for (uint64_t i = 0; ; i++) {
-    kprintf("heartbeat %lu, free pages %lu\n", i, pmm_free_count());
-    task_sleep_ms(1000);
-  }
-}
 
 void kernel_main(void) {
   kprintf("Hello from ARM Operating System.\n");
@@ -44,7 +35,8 @@ void kernel_main(void) {
 
   sched_init();
   const Prog *sh = prog_find("sh");
-  sched_add(process_create(sh->start, sh->end - sh->start, "sh"));
+  const char *sh_argv[] = { "sh" };
+  sched_add(process_create(sh->start, sh->end - sh->start, "sh", 1, sh_argv));
 
   gic_init();
   uart_rx_init();

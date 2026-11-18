@@ -31,4 +31,15 @@ static inline void u_putnum(unsigned long num) {
   }
 }
 
+static inline long u_atoi(const char *s) {
+  long i = 0;
+
+  while (*s >= '0' && *s <= '9') {
+    i = i * 10 + (*s - '0');
+    s++;
+  }
+
+  return i;
+}
+
 #endif

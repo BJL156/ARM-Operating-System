@@ -5,11 +5,15 @@
 #include "irq.h"
 #include "memmap.h"
 #include "sched.h"
+#include "syscall_abi.h"
 #include "sysreg.h"
 #include "task.h"
 #include "process.h"
 #include "progs.h"
 #include "uart.h"
+
+#define MAX_ARGS 8
+#define ARG_LEN  64
 
 static long sys_write(const char *buf, uint64_t len) {
   if (len > 4096) {
@@ -68,24 +72,54 @@ static long copy_user_str(char *dst, int max, const char *src) {
     }
   }
 
-  return -1;
+  return E_2BIG;
 }
 
-static long sys_spawn(const char *uname) {
-  char name[32];
-  if (copy_user_str(name, sizeof(name), uname) < 0) {
-    return -1;
+static long sys_spawn(uint64_t uargv) {
+  char args[MAX_ARGS][ARG_LEN];
+  const char *argv[MAX_ARGS];
+  int argc = 0;
+  ASpace *aspace = sched_current()->aspace;
+
+  while (1) {
+    uint64_t slot = uargv + (uint64_t)argc * 8;
+    if (!aspace_user_ok(aspace, slot, 8, 0)) {
+      return E_FAULT;
+    }
+
+    uint64_t ptr = *(uint64_t *)slot;
+    if (ptr == 0) {
+      break;
+    }
+
+    if (argc == MAX_ARGS) {
+      return E_2BIG;
+    }
+
+    int n = copy_user_str(args[argc], ARG_LEN, (const char *)ptr) < 0;
+    if (n < 0) {
+      return n;
+    }
+
+    argv[argc] = args[argc];
+    argc++;
   }
 
-  const Prog *prog = prog_find(name);
+  if (argc == 0) {
+    return E_NOENT;
+  }
+
+  const Prog *prog = prog_find(argv[0]);
   if (prog == NULL) {
-    return -1;
+    return E_NOENT;
   }
 
-  Task *task = process_create(prog->start, prog->end - prog->start, prog->name);
+  Task *task = process_create(prog->start, prog->end - prog->start, prog->name, argc, argv);
   if (task == NULL) {
-    return -1;
+    return E_NOMEM;
   }
+
+  task->parent_id = sched_current()->id;
 
   uint64_t id = task->id;
   sched_add(task);
@@ -143,7 +177,7 @@ void syscall_dispatch(TrapFrame *trap_frame) {
       break;
     }
     case SYS_SPAWN: {
-      ret = sys_spawn((const char *)a0);
+      ret = sys_spawn(a0);
       break;
     }
     case SYS_WAIT: {

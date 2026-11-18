@@ -1,24 +1,16 @@
 #include "ulib.h"
 #include "usys.h"
 
-void _start(void) {
-  char c;
-  for (;;) {
-    if (usys_read(&c, 1) != 1) {
-      continue;
+void _start(long argc, char **argv) {
+  for (long i = 1; i < argc; i++) {
+    if (i > 1) {
+      u_puts(" ");
     }
 
-    if (c == 0x03 || c == 0x04) {
-      u_puts("\r\n");
-      usys_exit(0);
-    }
-
-    if (c == '\r' || c == '\n') {
-      usys_write("\r\n", 2);
-    } else if (c == 0x7f) {
-      usys_write("\b \b", 3);
-    } else {
-      usys_write(&c, 1);
-    }
+    u_puts(argv[i]);
   }
+
+  u_puts("\r\n");
+
+  usys_exit(0);
 }

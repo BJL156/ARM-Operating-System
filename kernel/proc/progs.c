@@ -7,13 +7,15 @@ extern char echo_elf_start[], echo_elf_end[];
 extern char shell_elf_start[], shell_elf_end[];
 extern char fail_elf_start[], fail_elf_end[];
 extern char crash_elf_start[], crash_elf_end[];
+extern char status_elf_start[], status_elf_end[];
 
 static const Prog progs[] = {
-  { "hello", hello_elf_start, hello_elf_end },
-  { "echo",  echo_elf_start,  echo_elf_end  },
-  { "sh",    shell_elf_start, shell_elf_end },
-  { "fail",  fail_elf_start,  fail_elf_end  },
-  { "crash", crash_elf_start, crash_elf_end },
+  { "hello",  hello_elf_start,  hello_elf_end  },
+  { "echo",   echo_elf_start,   echo_elf_end   },
+  { "sh",     shell_elf_start,  shell_elf_end  },
+  { "fail",   fail_elf_start,   fail_elf_end   },
+  { "crash",  crash_elf_start,  crash_elf_end  },
+  { "status", status_elf_start, status_elf_end },
 };
 
 static int str_equal(const char *a, const char *b) {

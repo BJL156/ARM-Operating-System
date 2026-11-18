@@ -9,4 +9,9 @@
 #define SYS_SPAWN  6
 #define SYS_WAIT   7
 
+#define E_FAULT (-1)
+#define E_NOENT (-2)
+#define E_2BIG  (-3)
+#define E_NOMEM (-4)
+
 #endif

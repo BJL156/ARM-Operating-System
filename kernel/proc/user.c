@@ -4,9 +4,8 @@
 
 #define USER_STACK_SIZE 16384
 
-
 void user_launch(void *arg) {
   (void)arg;
   Task *task = sched_current();
-  enter_user(task->user_entry, task->user_sp);
+  enter_user(task->user_entry, task->user_sp, task->user_argc, task->user_argv);
 }

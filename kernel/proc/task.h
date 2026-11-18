@@ -38,6 +38,8 @@ typedef struct Task {
   uint64_t parent_id;
   int exit_code;
   int collected;
+  uint64_t user_argc;
+  uint64_t user_argv;
 } Task;
 
 Task *task_create(void (*fn)(void *), void *arg, const char *name);

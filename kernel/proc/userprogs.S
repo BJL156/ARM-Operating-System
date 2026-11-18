@@ -39,3 +39,11 @@ fail_elf_end:
 crash_elf_start:
   .incbin "build/user/crash.elf"
 crash_elf_end:
+
+.balign 16
+.global status_elf_start
+.global status_elf_end
+
+status_elf_start:
+  .incbin "build/user/status.elf"
+status_elf_end:

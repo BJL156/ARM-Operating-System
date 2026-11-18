@@ -2,6 +2,43 @@
 #include "usys.h"
 
 #define LINE_MAX 64
+#define MAX_ARGS 8
+
+static const char *spawn_error(long e) {
+  switch (e) {
+    case E_NOENT: return "Unknown program";
+    case E_2BIG:  return "Argument list too long";
+    case E_NOMEM: return "Out of memory";
+    default:      return "Spawn failed";
+  }
+}
+
+static int tokenize(char *line, char *argv[], int max) {
+  int argc = 0;
+  char *p = line;
+
+  while (*p) {
+    while (*p == ' ') {
+      *p++ = '\0';
+    }
+
+    if (*p == '\0') {
+      break;
+    }
+
+    if (argc == max - 1) {
+      return -1;
+    }
+
+    argv[argc++] = p;
+    while (*p && *p != ' ') {
+      p++;
+    }
+  }
+
+  argv[argc] = NULL;
+  return argc;
+}
 
 static int read_line(char *buf, int max) {
   int len = 0;
@@ -49,13 +86,27 @@ void _start(void) {
       u_puts("Adios.\r\n");
       usys_exit(0);
     }
+
     if (len == 0) {
       continue;
     }
 
-    long pid = usys_spawn(line);
+    char *argv[MAX_ARGS + 1];
+    int argc = tokenize(line, argv, MAX_ARGS + 1);
+    if (argc < 0) {
+      u_puts("Too many arguments.\r\n");
+      continue;
+    }
+
+    if (argc == 0) {
+      continue;
+    }
+
+    long pid = usys_spawn(argv);
     if (pid < 0) {
-      u_puts("Unknown program.\r\n");
+      u_puts(spawn_error(pid));
+      u_puts(".\r\n");
+
       continue;
     }
 
