@@ -40,37 +40,191 @@ static int tokenize(char *line, char *argv[], int max) {
   return argc;
 }
 
+enum {
+  KEY_NONE = 256, KEY_UP, KEY_DOWN, KEY_RIGHT, KEY_LEFT,
+  KEY_HOME, KEY_END, KEY_DELETE
+};
+
+static int read_byte(void) {
+  char c;
+  long n = usys_read(&c, 1);
+  if (n < 0) {
+    u_puts("read failed\r\n");
+    usys_exit(1);
+  }
+  return (n == 1) ? (unsigned char)c : -1;
+}
+
+static int read_key(void) {
+  int b = read_byte();
+  if (b == 0x01) return KEY_HOME;
+  if (b == 0x05) return KEY_END;
+  if (b != 0x1b) return b;
+
+  int c = read_byte();
+  if (c == 'O') {
+    c = read_byte();
+    switch (c) {
+      case 'A': return KEY_UP;
+      case 'B': return KEY_DOWN;
+      case 'C': return KEY_RIGHT;
+      case 'D': return KEY_LEFT;
+      case 'H': return KEY_HOME;
+      case 'F': return KEY_END;
+      default:  return KEY_NONE;
+    }
+  }
+
+  if (c != '[') {
+    return KEY_NONE;
+  }
+
+  int num = 0;
+  int after_semicolon = 0;
+  while (1) {
+    c = read_byte();
+    if (c >= '0' && c <= '9') {
+      if (!after_semicolon) num = num * 10 + (c - '0');
+    } else if (c == ';') {
+      after_semicolon = 1;
+    } else if (c >= 0x40 && c <= 0x7e) {
+      break;
+    }
+  }
+
+  switch (c) {
+    case 'A': return KEY_UP;
+    case 'B': return KEY_DOWN;
+    case 'C': return KEY_RIGHT;
+    case 'D': return KEY_LEFT;
+    case 'H': return KEY_HOME;
+    case 'F': return KEY_END;
+    case '~':
+      if (num == 3) return KEY_DELETE;
+      if (num == 1 || num == 7) return KEY_HOME;
+      if (num == 4 || num == 8) return KEY_END;
+      return KEY_NONE;
+    default:  return KEY_NONE;
+  }
+}
+
+static void cursor_left(int n) {
+  if (n > 0) {
+    u_puts("\x1b[");
+    u_putnum((unsigned long)n);
+    u_puts("D");
+  }
+}
+
+static void cursor_right(int n) {
+  if (n > 0) {
+    u_puts("\x1b[");
+    u_putnum((unsigned long)n);
+    u_puts("C");
+  }
+}
+
+static void redraw(const char *buf, int from, int len, int cursor, int blank) {
+  if (len > from) {
+    usys_write(buf + from, (size_t)(len - from));
+  }
+
+  if (blank) {
+    u_puts(" ");
+  }
+
+  cursor_left((len - cursor) + (blank ? 1 : 0));
+}
+
 static int read_line(char *buf, int max) {
   int len = 0;
+  int pos = 0;
 
   for (;;) {
-    char c;
+    int k = read_key();
 
-    if (usys_read(&c, 1) != 1) {
-      continue;
-    }
-
-    if (c == '\r' || c == '\n') {
+    if (k == '\r' || k == '\n') {
       u_puts("\r\n");
       buf[len] = '\0';
       return len;
     }
-
-    if (c == 0x04 && len == 0) {
+    if (k == 0x04 && len == 0) {
       return -1;
     }
 
-    if (c == 0x7f) {
-      if (len > 0) {
-        len--;
-        u_puts("\b \b");
-      }
-      continue;
-    }
+    switch (k) {
+      case KEY_LEFT: {
+        if (pos > 0) {
+          cursor_left(1);
+          pos--;
+        }
 
-    if (len < max - 1) {
-      buf[len++] = c;
-      usys_write(&c, 1);
+        break;
+      }
+      case KEY_RIGHT: {
+        if (pos < len) {
+          cursor_right(1);
+          pos++;
+        }
+
+        break;
+      }
+      case KEY_HOME: {
+        cursor_left(pos);
+        pos = 0;
+
+        break;
+      }
+      case KEY_END: {
+        cursor_right(len - pos);
+        pos = len;
+
+        break;
+      }
+      case 0x7f:
+      case 0x08: {
+        if (pos > 0) {
+          for (int i = pos - 1; i < len - 1; i++) {
+            buf[i] = buf[i + 1];
+          }
+
+          len--;
+          pos--;
+
+          cursor_left(1);
+          redraw(buf, pos, len, pos, 1);
+        }
+
+        break;
+      }
+      case KEY_DELETE: {
+        if (pos < len) {
+          for (int i = pos; i < len - 1; i++) {
+            buf[i] = buf[i + 1];
+          }
+
+          len--;
+
+          redraw(buf, pos, len, pos, 1);
+        }
+
+        break;
+      }
+      default: {
+        if (k >= 0x20 && k <= 0x7e && len < max - 1) {
+          for (int i = len; i > pos; i--) {
+            buf[i] = buf[i - 1];
+          }
+
+          buf[pos++] = (char)k;
+
+          len++;
+
+          redraw(buf, pos - 1, len, pos, 0);
+        }
+
+        break;
+      }
     }
   }
 }
@@ -105,7 +259,9 @@ void _start(void) {
     long pid = usys_spawn(argv);
     if (pid < 0) {
       u_puts(spawn_error(pid));
-      u_puts(".\r\n");
+      u_puts(" (");
+      u_putnum((unsigned long)-pid);
+      u_puts(")\r\n");
 
       continue;
     }

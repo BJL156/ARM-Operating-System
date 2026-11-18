@@ -106,11 +106,18 @@ static long sys_spawn(uint64_t uargv) {
   }
 
   if (argc == 0) {
+    kprintf("Syscall: empty argv.\n");
     return E_NOENT;
   }
 
   const Prog *prog = prog_find(argv[0]);
   if (prog == NULL) {
+    kprintf("Syscall: no program '%s' (argc %d).\n", argv[0], argc);
+    for (int i = 0; i < 8; i++) {
+      kprintf(" %x", (unsigned)(unsigned char)argv[0][i]);
+    }
+    kprintf("\n");
+
     return E_NOENT;
   }
 
