@@ -26,6 +26,7 @@ AArch64 was chosen as the target ISA to continue from the [ARM tool chain](https
 - [x] User mode (EL0) execution
 - [x] System calls (`write`, `sleep`, `read`, `exit`)
 - [x] User pointer validation and fault isolation
+- [x] Shell 
 
 ## Build
 > [!NOTE]
