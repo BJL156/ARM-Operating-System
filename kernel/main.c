@@ -1,9 +1,11 @@
+#include "fs.h"
 #include "fs_format.h"
 #include "gic.h"
 #include "kheap.h"
 #include "kprintf.h"
 #include "memmap.h"
 #include "mmu.h"
+#include "panic.h"
 #include "pmm.h"
 #include "process.h"
 #include "progs.h"
@@ -35,8 +37,24 @@ void kernel_main(void) {
   mmu_init();
 
   extern char fs_image_start[], fs_image_end[];
-  FSHeader *hdr = (FSHeader *)fs_image_start;
-  kprintf("fs image: %lu bytes, %lu files\n", (uint64_t)(fs_image_end - fs_image_start), (uint64_t)hdr->count);
+  if (fs_init(fs_image_start, fs_image_end - fs_image_start) != 0) {
+    panic("Kernel: Bad filesystem image.");
+  }
+
+  kprintf("Files:\n");
+  for (uint32_t i = 0; i < fs_count(); i++) {
+    const FSEntry *entry = fs_entry_at(i);
+    kprintf("  %s  %lu bytes\n", entry->name, (uint64_t)entry->size);
+  }
+
+  const FSEntry *entry = fs_entry_lookup("hello.txt");
+  if (entry != NULL) {
+    for (uint32_t i = 0; i < entry->size; i++) {
+      uart_putc((char)fs_data(entry)[i]);
+    }
+  }
+
+  kprintf("Lookup nosuch: %p\n", (void *)fs_entry_lookup("nosuch"));
 
   sched_init();
   const Prog *sh = prog_find("sh");
