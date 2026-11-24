@@ -1,3 +1,4 @@
+#include "fs_format.h"
 #include "gic.h"
 #include "kheap.h"
 #include "kprintf.h"
@@ -32,6 +33,10 @@ void kernel_main(void) {
   kprintf("Free pages:   %lu\n", pmm_free_count());
   kheap_init(HEAP_START, HEAP_SIZE);
   mmu_init();
+
+  extern char fs_image_start[], fs_image_end[];
+  FSHeader *hdr = (FSHeader *)fs_image_start;
+  kprintf("fs image: %lu bytes, %lu files\n", (uint64_t)(fs_image_end - fs_image_start), (uint64_t)hdr->count);
 
   sched_init();
   const Prog *sh = prog_find("sh");

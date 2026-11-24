@@ -24,6 +24,18 @@ DEPS := $(K_OBJS:.o=.d) $(USER_ELFS:.elf=.d)
 QEMU       := qemu-system-aarch64
 QEMU_FLAGS := -machine virt,gic-version=2 -cpu cortex-a72 -m 128M -nographic -kernel $(KERNEL)
 
+HOSTCC   := gcc
+FS_FILES := $(sort $(wildcard rootfs/*))
+
+$(BUILD)/tools/mkfs: tools/mkfs.c include/fs_format.h
+	@mkdir -p $(dir $@)
+	$(HOSTCC) -Wall -Wextra -O2 -Iinclude -o $@ $<
+
+$(BUILD)/fs.img: $(BUILD)/tools/mkfs $(FS_FILES)
+	$< $@ $(FS_FILES)
+
+$(BUILD)/kernel/fs/fsimage.S.o: $(BUILD)/fs.img
+
 .PHONY: all run debug dump clean
 
 all: $(KERNEL)
