@@ -12,7 +12,6 @@ AArch64 was chosen as the target ISA to continue from the [ARM tool chain](https
 ### Features
 - [x] Bootloader
 - [x] UART
-- [x] Kernel `printf` (`kprintf`)
 - [x] Exception handling
 - [x] GIC
 - [x] Timer
